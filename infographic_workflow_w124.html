@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Infographic: Workflow การเร่งรัดและบอกเลิกสัญญา (ว124)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Sarabun', sans-serif;
+        }
+        .flow-card {
+            border: 1px solid #E2E8F0;
+            transition: all 0.3s ease-in-out;
+        }
+        .flow-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        .flow-connector {
+            width: 4px;
+            background-color: #3E92CC;
+            position: relative;
+        }
+        .flow-connector::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-left: 10px solid transparent;
+            border-right: 10px solid transparent;
+            border-top: 10px solid #3E92CC;
+        }
+        .decision-fork::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: -32px;
+            width: 32px;
+            height: 4px;
+            background-color: #E84855;
+        }
+        .decision-fork::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            right: -32px;
+            width: 32px;
+            height: 4px;
+            background-color: #22c55e;
+        }
+        .decision-connector {
+             width: 4px;
+             margin: 0 auto;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800">
+    
+    <div class="container mx-auto p-4 md:p-8 max-w-5xl">
+
+        <header class="text-center mb-10">
+            <h1 class="text-3xl md:text-4xl font-bold text-[#0A2463]">Workflow: การติดตาม เร่งรัด และพิจารณาบอกเลิกสัญญา</h1>
+            <p class="text-lg text-[#3E92CC] font-semibold mt-2">อ้างอิง: หนังสือ กค(กวจ) 0405.2/ว124 ลงวันที่ 1 มีนาคม 2566 แนวทางปฏิบัติในการเร่งรัดการปฏิบัติงานตามสัญญาและการกำหนดคุณสมบัติของผู้มีสิทธิยื่นข้อเสนอ</p>
+        </header>
+        
+        <!-- ส่วนวิเคราะห์สถานะสัญญาด้วย Gemini API -->
+        <div id="gemini-analyzer" class="bg-[#FFF275] p-6 md:p-8 rounded-xl shadow-xl mb-12 border-4 border-[#0A2463]">
+            <h2 class="text-2xl md:text-3xl font-extrabold text-[#0A2463] text-center mb-6">
+                ✨ เครื่องมือวิเคราะห์สถานะสัญญา (ว124 Scenario Analyzer) ✨
+            </h2>
+            <p class="text-center text-gray-700 mb-6">ป้อนข้อมูลสถานะปัจจุบันของสัญญา เพื่อให้ระบบวิเคราะห์ว่าเข้าข่ายเกณฑ์การพิจารณาบอกเลิกสัญญาตาม ว124 ข้อ 2.2 หรือไม่</p>
+            
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                <div>
+                    <label for="totalDuration" class="block text-sm font-medium text-[#0A2463]">1. ระยะเวลาสัญญา (วัน)</label>
+                    <input type="number" id="totalDuration" value="180" min="1" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-3 text-lg" placeholder="180 วัน">
+                </div>
+                <div>
+                    <label for="elapsedTime" class="block text-sm font-medium text-[#0A2463]">2. ระยะเวลาเริ่มสัญญา-ปัจจุบัน (วัน)</label>
+                    <input type="number" id="elapsedTime" value="100" min="0" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-3 text-lg" placeholder="100 วัน">
+                </div>
+                <div>
+                    <label for="currentProgress" class="block text-sm font-medium text-[#0A2463]">3. ผลงานสะสม (%)</label>
+                    <input type="number" id="currentProgress" value="40" min="0" max="100" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-3 text-lg" placeholder="40%">
+                </div>
+                <div>
+                    <label for="monthlyProgress" class="block text-sm font-medium text-[#0A2463]">4. ผลงานรายเดือน (%)</label>
+                    <input type="number" id="monthlyProgress" value="40" min="0" max="100" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-3 text-lg" placeholder="50%">
+                </div>
+            </div>
+            
+            <button onclick="analyzeScenario()" class="w-full bg-[#E84855] hover:bg-[#C23C48] text-white font-bold py-3 rounded-lg shadow-md transition duration-300">
+                วิเคราะห์สถานะสัญญาตามเกณฑ์ ว124
+            </button>
+
+            <div id="loadingIndicator" class="mt-4 text-center text-[#0A2463] hidden">กำลังวิเคราะห์... โปรดรอสักครู่ ⏳</div>
+
+            <div id="analysisResult" class="mt-6 p-4 bg-white rounded-lg shadow-inner border border-gray-200 min-h-20 font-semibold text-[#0A2463]">
+                <p class="text-gray-500">ผลการวิเคราะห์จะแสดงที่นี่...</p>
+            </div>
+        </div>
+        <!-- สิ้นสุดส่วน Gemini Analyzer -->
+
+        <div class="flex flex-col items-center">
+
+            <div class="flow-card w-full max-w-2xl bg-white rounded-lg shadow-md p-6 text-center mb-8">
+                <div class="text-2xl font-bold text-[#0A2463]">1. จุดเริ่มต้น: การติดตามผลงาน</div>
+                <p class="mt-2 text-gray-600">เมื่อพบว่าผลงานล่าช้ากว่าแผนงานที่กำหนด</p>
+                <div class="mt-4 border-t pt-4">
+                    <p><strong class="text-[#3E92CC]">ผู้รับผิดชอบ:</strong> คณะกรรมการตรวจรับพัสดุ / ผู้ควบคุมงาน</p>
+                    <p><strong class="text-[#3E92CC]">การดำเนินการ:</strong> ติดตามผลงานจริงเทียบกับแผน และแจ้งเตือนเป็นหนังสือให้คู่สัญญารีบเร่งรัดการทำงาน</p>
+                </div>
+            </div>
+
+            <div class="flow-connector h-16"></div>
+
+            <div class="flow-card w-full max-w-2xl bg-white rounded-lg shadow-md p-6 text-center mb-8">
+                <div class="text-2xl font-bold text-[#0A2463]">2. จุดตรวจสอบที่ 1: เกิน 50% ของระยะเวลาสัญญา</div>
+                 <p class="mt-2 text-gray-600">หากเข้าเงื่อนไขข้อใดข้อหนึ่ง ให้เสนอเรื่องพิจารณาบอกเลิกสัญญา</p>
+                <div class="mt-4 flex flex-col md:flex-row justify-around gap-4">
+                    <div class="flex-1 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-800 p-4 rounded-md">
+                        <p class="font-bold">เกณฑ์ 2.2.1</p>
+                        <p class="text-lg">ผลงานสะสม <strong class="text-2xl">&lt; 25%</strong></p>
+                    </div>
+                    <div class="flex-1 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-800 p-4 rounded-md">
+                        <p class="font-bold">เกณฑ์ 2.2.2</p>
+                        <p class="text-lg">ผลงานเดือน &lt; 50% <strong class="mx-1">และ</strong> ผลงานสะสม &lt; 50%</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flow-connector h-16"></div>
+
+            <div class="flow-card w-full max-w-2xl bg-white rounded-lg shadow-md p-6 text-center mb-8">
+                 <div class="text-2xl font-bold text-[#0A2463]">3. จุดตรวจสอบที่ 2: เกิน 75% ของระยะเวลาสัญญา</div>
+                 <p class="mt-2 text-gray-600">หากเข้าเงื่อนไข ให้เสนอเรื่องพิจารณาบอกเลิกสัญญา</p>
+                 <div class="mt-4 bg-orange-100 border-l-4 border-orange-500 text-orange-800 p-4 rounded-md">
+                    <p class="font-bold">เกณฑ์ 2.2.3</p>
+                    <p class="text-lg">ผลงานสะสม <strong class="text-2xl">&lt; 65%</strong></p>
+                </div>
+            </div>
+
+            <div class="flow-connector h-16"></div>
+
+            <div class="flow-card w-full max-w-2xl bg-white rounded-lg shadow-md p-6 text-center mb-8">
+                <div class="text-2xl font-bold text-[#0A2463]">4. จุดตรวจสอบที่ 3: ครบกำหนดส่งมอบงาน</div>
+                 <p class="mt-2 text-gray-600">ณ วันครบกำหนดสัญญา และเริ่มคิดค่าปรับ</p>
+                 <div class="mt-4 bg-red-100 border-l-4 border-red-500 text-red-800 p-4 rounded-md">
+                    <p class="font-bold">เกณฑ์ 2.2.4</p>
+                    <p class="text-lg">ผลงานสะสม <strong class="text-2xl">&lt; 85%</strong></p>
+                </div>
+            </div>
+
+            <div class="flow-connector h-16"></div>
+
+            <div class="flow-card w-full max-w-2xl bg-[#0A2463] text-white rounded-lg shadow-xl p-6 text-center mb-8">
+                <div class="text-2xl font-bold text-[#FFF275]">5. จุดวิกฤต: ค่าปรับจะเกิน 10%</div>
+                <p class="mt-2 text-gray-300">เข้าสู่เกณฑ์ 2.2.5 และเป็นจุดตัดสินใจสุดท้าย</p>
+                <div class="mt-4 border-t border-gray-600 pt-4">
+                     <p><strong class="text-[#FFF275]">การดำเนินการของ คกก.ตรวจรับฯ:</strong></p>
+                     <p>เสนอหัวหน้าหน่วยงานพิจารณาบอกเลิกสัญญา หรือพิจารณาผ่อนปรนตามข้อ 183 วรรคสอง</p>
+                </div>
+            </div>
+
+            <div class="decision-connector h-8 bg-gray-300 w-full max-w-2xl relative">
+                <div class="decision-fork"></div>
+                <div class="decision-fork" style="transform: scaleX(-1); right: 0; left: auto;"></div>
+            </div>
+
+            <div class="w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 gap-8 mt-4 relative">
+                 <div class="flow-card bg-white rounded-lg shadow-md p-6">
+                    <h3 class="text-xl font-bold text-center text-[#E84855]">ทางเลือกที่ 1: การบอกเลิกสัญญา</h3>
+                    <div class="w-16 h-1 bg-[#E84855] mx-auto mt-2 mb-4"></div>
+                    <p><strong class="text-gray-700">ผู้รับผิดชอบ:</strong> หัวหน้าหน่วยงานของรัฐ</p>
+                    <p class="mt-2"><strong class="text-gray-700">เงื่อนไข:</strong> หากพิจารณาแล้วเห็นว่าการให้ทำงานต่อไป **ไม่เป็นประโยชน์** แก่ทางราชการ</p>
+                    <p class="mt-4 font-semibold text-center text-[#E84855] bg-red-50 p-3 rounded-lg">ผลลัพธ์: แจ้งบอกเลิกสัญญา และดำเนินการตามขั้นตอนผู้ทิ้งงาน</p>
+                </div>
+
+                <div class="flow-card bg-white rounded-lg shadow-md p-6">
+                    <h3 class="text-xl font-bold text-center text-green-600">ทางเลือกที่ 2: การขอผ่อนปรน</h3>
+                     <div class="w-16 h-1 bg-green-500 mx-auto mt-2 mb-4"></div>
+                    <p><strong class="text-gray-700">ผู้รับผิดชอบ:</strong> คู่สัญญา (ผู้รับจ้าง)</p>
+                    <p class="mt-2"><strong class="text-gray-700">การดำเนินการ:</strong> ทำหนังสือแจ้งความประสงค์ขอทำงานต่อ และยินยอมชำระค่าปรับทั้งหมดที่เกิดขึ้น</p>
+                     <p class="mt-4 font-semibold text-center text-green-700 bg-green-50 p-3 rounded-lg">ผลลัพธ์: หากหัวหน้าหน่วยงานเห็นว่าเป็นประโยชน์ ให้ทำงานต่อได้</p>
+                </div>
+            </div>
+
+            <div class="flow-connector h-16 mt-8"></div>
+            
+            <div class="flow-card w-full max-w-2xl bg-white rounded-lg shadow-md p-6 text-center">
+                <div class="text-2xl font-bold text-[#0A2463]">สรุปการพิจารณา</div>
+                <p class="mt-2 text-gray-600">ในทุกกรณีที่เข้าเงื่อนไข 2.2.1 - 2.2.5 คณะกรรมการตรวจรับพัสดุต้องเสนอความเห็นต่อหัวหน้าหน่วยงานของรัฐ เพื่อใช้ **ดุลพินิจ** ในการตัดสินใจ โดยคำนึงถึงประโยชน์สูงสุดของทางราชการเป็นสำคัญ</p>
+            </div>
+        </div>
+
+        <footer class="text-center text-gray-500 mt-12 pb-4">
+            <p>Infographic created based on the provisions of the letter No. GorKor(GorVorJor) 0405.2/Wor124.</p>
+        </footer>
+
+    </div>
+
+    <script>
+        const API_KEY = ""; 
+        const API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=" + API_KEY;
+
+        async function fetchWithBackoff(url, options, retries = 5, delay = 1000) {
+            for (let i = 0; i < retries; i++) {
+                try {
+                    const response = await fetch(url, options);
+                    if (response.status !== 429) {
+                        return response;
+                    }
+                } catch (error) {
+                    if (i === retries - 1) throw error;
+                }
+                await new Promise(resolve => setTimeout(resolve, delay));
+                delay *= 2;
+            }
+            throw new Error("API request failed after multiple retries.");
+        }
+
+        async function analyzeScenario() {
+            const totalDuration = parseInt(document.getElementById('totalDuration').value);
+            const elapsedTime = parseInt(document.getElementById('elapsedTime').value);
+            const currentProgress = parseFloat(document.getElementById('currentProgress').value);
+            const monthlyProgress = parseFloat(document.getElementById('monthlyProgress').value);
+            const resultDiv = document.getElementById('analysisResult');
+            const loadingIndicator = document.getElementById('loadingIndicator');
+
+            if (isNaN(totalDuration) || isNaN(elapsedTime) || isNaN(currentProgress) || isNaN(monthlyProgress) || totalDuration <= 0 || elapsedTime < 0 || currentProgress < 0 || currentProgress > 100 || monthlyProgress < 0 || monthlyProgress > 100) {
+                resultDiv.innerHTML = '<p class="text-red-600 font-bold">กรุณาป้อนข้อมูลที่ถูกต้อง (ระยะเวลาสัญญาต้องมากกว่า 0 และผลงานต้องอยู่ในช่วง 0-100%)</p>';
+                return;
+            }
+
+            loadingIndicator.classList.remove('hidden');
+            resultDiv.innerHTML = ''; 
+
+            const elapsedPercent = (elapsedTime / totalDuration) * 100;
+            const remainingTime = totalDuration - elapsedTime;
+            const remainingProgress = 100 - currentProgress;
+            
+            let timeStatus = "";
+            if (elapsedTime === 0) {
+                timeStatus = "ยังไม่เริ่มงาน (Elapsed: 0%)";
+            } else if (elapsedPercent < 50) {
+                timeStatus = `อยู่ในช่วงเริ่มต้นของสัญญา (Elapsed: ${elapsedPercent.toFixed(1)}%)`;
+            } else if (elapsedPercent >= 50 && elapsedPercent < 75) {
+                timeStatus = `ล่วงเลยเกินกว่าครึ่งหนึ่งของระยะเวลาสัญญาแล้ว (Elapsed: ${elapsedPercent.toFixed(1)}%)`;
+            } else if (elapsedPercent >= 75 && elapsedPercent < 100) {
+                timeStatus = `ล่วงเลยเกินกว่าสามในสี่ของระยะเวลาสัญญาแล้ว (Elapsed: ${elapsedPercent.toFixed(1)}%)`;
+            } else if (elapsedPercent >= 100 && currentProgress < 100) {
+                 timeStatus = `ครบกำหนดส่งมอบงานแล้ว แต่ยังไม่แล้วเสร็จ (Elapsed: ${elapsedPercent.toFixed(1)}%)`;
+            } else if (currentProgress >= 100) {
+                 timeStatus = `สัญญาเสร็จสิ้นและแล้วเสร็จ 100%`;
+            }
+
+
+            const systemPrompt = `คุณคือผู้เชี่ยวชาญด้านกฎหมายการจัดซื้อจัดจ้างและการบริหารพัสดุภาครัฐของไทย (พ.ร.บ. พัสดุ 2560 และ ว124) หน้าที่ของคุณคือวิเคราะห์สถานะของสัญญาที่ได้รับ โดยอ้างอิงเกณฑ์การพิจารณาบอกเลิกสัญญาตามหนังสือ กค(กวจ) 0405.2/ว124 ข้อ 2.2.1 ถึง 2.2.5 และระเบียบข้อ 183 วรรคสอง
+
+            เกณฑ์หลัก (ความผิดเกิดจากคู่สัญญา):
+            1. จุด 50% (E > 50%): หากผลงานสะสม < 25% (2.2.1) ให้พิจารณาบอกเลิก หรือ หากผลงานสะสม < 50% (2.2.2) ให้พิจารณาบอกเลิก (ต้องใช้ข้อมูลผลงานรายเดือนประกอบ)
+            2. จุด 75% (E > 75%): หากผลงานสะสม < 65% (2.2.3) ให้พิจารณาบอกเลิก
+            3. จุด 100% (E >= 100%): หากผลงานสะสม < 85% (2.2.4) ให้พิจารณาบอกเลิก หรือ หากค่าปรับจะเกิน 10% (2.2.5) ให้พิจารณาบอกเลิก
+
+            จงทำการวิเคราะห์สถานะสัญญานี้:
+            1. วิเคราะห์ว่าสถานะนี้เข้าข่ายเกณฑ์ข้อ 2.2.1 ถึง 2.2.5 หรือไม่
+            2. **สำคัญที่สุด:** สรุปผลการวิเคราะห์โดยเน้นเฉพาะ **"คำแนะนำในการดำเนินการ"** ว่า **"ควรดำเนินการอย่างไร"** (แจ้งเตือน, เสนอพิจารณาบอกเลิก, หรือผ่อนปรนตามข้อ 183)
+            3. **สำคัญ:** ผลลัพธ์ต้องเป็นข้อความแนะนำการดำเนินการที่ชัดเจนและกระชับเท่านั้น **ห้ามแสดงรายละเอียดการคำนวณ หรือการวิเคราะห์ว่าเข้าเกณฑ์ใดเป็นตัวเลขออกมาเด็ดขาด** ให้แสดงเฉพาะคำแนะนำสุดท้ายเท่านั้น.`;
+
+            const userQuery = `โปรดวิเคราะห์สถานะสัญญาที่มีข้อมูลดังนี้:
+            - ระยะเวลารวมของสัญญา: ${totalDuration} วัน
+            - ระยะเวลาก่อสร้าง (นับตั้งแต่วันที่แจ้งเริ่มงานถึงปัจจุบัน): ${elapsedTime} วัน
+            - ผลงานสะสม ณ ปัจจุบัน: ${currentProgress}%
+            - ผลงานรายเดือน ณ ปัจจุบัน (เทียบกับแผน): ${monthlyProgress}%
+            - สถานะเวลาโดยประมาณ: ${timeStatus}`;
+
+            const payload = {
+                contents: [{ parts: [{ text: userQuery }] }],
+                systemInstruction: { parts: [{ text: systemPrompt }] },
+            };
+
+            try {
+                const response = await fetchWithBackoff(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                
+                const result = await response.json();
+                const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
+                
+                if (text) {
+                    resultDiv.innerHTML = text; 
+                } else {
+                    resultDiv.innerHTML = '<p class="text-red-600">ไม่สามารถรับผลการวิเคราะห์ได้ โปรดลองใหม่อีกครั้ง</p>';
+                }
+
+            } catch (error) {
+                console.error("Gemini API Error:", error);
+                resultDiv.innerHTML = '<p class="text-red-600 font-bold">เกิดข้อผิดพลาดในการเชื่อมต่อ API. โปรดตรวจสอบการตั้งค่าหรือลองอีกครั้ง</p>';
+            } finally {
+                loadingIndicator.classList.add('hidden');
+            }
+        }
+    </script>
+</body>
+</html>
