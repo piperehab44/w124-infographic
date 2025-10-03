@@ -206,13 +206,21 @@
     </div>
 
     <script>
+        // *** หมายเหตุสำคัญ: API Key ไม่สามารถทำงานโดยตรงบน GitHub Pages ได้เนื่องจากปัญหาด้านความปลอดภัย ***
+        // *** ต้องมีการติดตั้ง "ฟังก์ชันตัวกลาง (Proxy Function)" บน Cloud Service เช่น Netlify Functions หรือ Firebase Cloud Functions เพื่อซ่อน API Key ***
+
+        // URL นี้ควรถูกแทนที่ด้วย Endpoint ของฟังก์ชันตัวกลางที่คุณตั้งขึ้นบน Cloud
+        const PROXY_API_URL = "/api/analyze-contract-status"; 
+        
+        // เรายังคงเก็บตัวแปรเหล่านี้ไว้ แต่จะไม่ได้ใช้งานในการเรียก fetch โดยตรง
         const API_KEY = ""; 
-        const API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=" + API_KEY;
+        const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=" + API_KEY;
 
         async function fetchWithBackoff(url, options, retries = 5, delay = 1000) {
             for (let i = 0; i < retries; i++) {
                 try {
-                    const response = await fetch(url, options);
+                    // เปลี่ยนการเรียก fetch ไปใช้ PROXY_API_URL
+                    const response = await fetch(url, options); 
                     if (response.status !== 429) {
                         return response;
                     }
@@ -242,8 +250,6 @@
             resultDiv.innerHTML = ''; 
 
             const elapsedPercent = (elapsedTime / totalDuration) * 100;
-            const remainingTime = totalDuration - elapsedTime;
-            const remainingProgress = 100 - currentProgress;
             
             let timeStatus = "";
             if (elapsedTime === 0) {
@@ -275,35 +281,38 @@
 
             const userQuery = `โปรดวิเคราะห์สถานะสัญญาที่มีข้อมูลดังนี้:
             - ระยะเวลารวมของสัญญา: ${totalDuration} วัน
-            - ระยะเวลาก่อสร้าง (นับตั้งแต่วันที่แจ้งเริ่มงานถึงปัจจุบัน): ${elapsedTime} วัน
+            - ระยะเวลาเริ่มสัญญา-ปัจจุบัน: ${elapsedTime} วัน
             - ผลงานสะสม ณ ปัจจุบัน: ${currentProgress}%
             - ผลงานรายเดือน ณ ปัจจุบัน (เทียบกับแผน): ${monthlyProgress}%
             - สถานะเวลาโดยประมาณ: ${timeStatus}`;
-
-            const payload = {
-                contents: [{ parts: [{ text: userQuery }] }],
-                systemInstruction: { parts: [{ text: systemPrompt }] },
+            
+            // สร้าง Payload ที่จะส่งไปยังฟังก์ชันตัวกลาง
+            const proxyPayload = {
+                systemInstruction: systemPrompt,
+                userQuery: userQuery
             };
 
             try {
-                const response = await fetchWithBackoff(API_URL, {
+                // เรียกใช้ฟังก์ชันตัวกลาง (PROXY_API_URL)
+                const response = await fetchWithBackoff(PROXY_API_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
+                    body: JSON.stringify(proxyPayload)
                 });
                 
                 const result = await response.json();
-                const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
                 
-                if (text) {
-                    resultDiv.innerHTML = text; 
+                if (response.ok) {
+                    const text = result.recommendation; // คาดว่าฟังก์ชันตัวกลางจะส่งผลลัพธ์ในรูปแบบ JSON ที่มี key ชื่อ 'recommendation'
+                    resultDiv.innerHTML = text || '<p class="text-red-600">ไม่สามารถรับผลการวิเคราะห์ที่ถูกต้องจากเซิร์ฟเวอร์ตัวกลางได้</p>';
                 } else {
-                    resultDiv.innerHTML = '<p class="text-red-600">ไม่สามารถรับผลการวิเคราะห์ได้ โปรดลองใหม่อีกครั้ง</p>';
+                    // กรณีฟังก์ชันตัวกลางมีปัญหา (HTTP Error 4xx, 5xx)
+                    resultDiv.innerHTML = `<p class="text-red-600 font-bold">ข้อผิดพลาดจากเซิร์ฟเวอร์ตัวกลาง: ${result.error || 'Unknown Error'}</p>`;
                 }
 
             } catch (error) {
-                console.error("Gemini API Error:", error);
-                resultDiv.innerHTML = '<p class="text-red-600 font-bold">เกิดข้อผิดพลาดในการเชื่อมต่อ API. โปรดตรวจสอบการตั้งค่าหรือลองอีกครั้ง</p>';
+                console.error("PROXY API Call Error:", error);
+                resultDiv.innerHTML = '<p class="text-red-600 font-bold">เกิดข้อผิดพลาดในการเชื่อมต่อฟังก์ชันตัวกลาง (เช่น: URL ไม่ถูกต้อง) โปรดตรวจสอบการติดตั้งฟังก์ชันตัวกลาง</p>';
             } finally {
                 loadingIndicator.classList.add('hidden');
             }
